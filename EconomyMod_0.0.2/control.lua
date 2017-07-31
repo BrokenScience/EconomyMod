@@ -1,6 +1,5 @@
 if not item_order then item_order = {} end
 if not frame_name then frame_name = 0 end
-if not max_runs then max_runs = 50 end
 
 -- Test gui control
 script.on_event("Eco", function(event)
@@ -26,12 +25,12 @@ function test_open(player)
 	-- Make table of recipes that are not hidden
 	for recipe_name, recipe in pairs(game.recipe_prototypes) do
 		if recipe.hidden == false then
-		--debuggery.add({type = "label", name = next_name, caption = table.tostring({recipe.ingredients, recipe.products})})
+		debuggery.add({type = "label", name = next_name, caption = table.tostring({recipe.ingredients, recipe.products})})
 		table.insert(inout, {recipe.ingredients, recipe.products})
 		end
 	end
 	
-	build_orderer(debuggery)
+	order(build_orderer(debuggery), debuggery)
 	
 	--local count = table.count(item_order)
 	
@@ -42,165 +41,84 @@ function test_open(player)
 	--frame.add({type = "label", name = next_name(), caption = count})
 end
 
--- Creates the order for updating items
-function fill_item_order(inout, debuggery)
-	-- raw: {item_names}
-	local raw = {}
-	
-	-- Add all raw resources to table that will serve as the start of order graph
-	for __, item in pairs(game.item_prototypes) do
-		if not item.has_flag("hidden") and item.subgroup.name == "raw-resource" then
-			table.insert(raw, item.name)
-		end
-	end
-	
-	--return item_graph
-	
-	--debuggery.add({type = "label", name = next_name(), caption = raw[1]})
-	-- Start the recursive process of creating the update order
-	assess_item(item_graph, raw[1], {}, debuggery)
-end
-
 -- Order all items
 function build_orderer(debuggery)
 	-- orderer: product.name = {{ingredients}, is_ordered}
 	local orderer = {}
+	local items = {}
 	for __, item in pairs(game.item_prototypes) do
 		if not item.has_flag("hidden") then
 			orderer[item.name] = {{}, false}
+			table.insert(items, item.name)
 		end
 	end
 	
 	-- For each recipe...
 	for __, recipe in pairs(game.recipe_prototypes) do
 		-- Ingredients for this recipe
-		if not is_hidden(recipe) then
+		if not is_hidden(orderer, recipe) then
 		
 			local ingredients = {}
 		
 			-- For each ingredient...
 			for __, ingredient in pairs(inout[i][1]) do
-				-- Make sure ingredient exists in graph
-				if not orderer[ingredient.name] then
-					graph[ingredient.name] = {{{}, {}}, false}
-				end
-				
 				-- Add to table of ingredients
 				table.insert(ingredients, ingredient.name)
 			end
-				
+			
+			-- For each product...
+			for __, product in pairs(recipe.products) do
+				if orderer[product.name] then
+					-- Add recipe ingredients to products's ingredients
+					table.insert(orderer[product.name][1], ingredients)
+				end
 			end
 		end
-			
-		-- For each product...
-		for __, product in pairs(inout[i][2]) do
-			-- Make sure product exists in graph
-			if not graph[product.name] then
-				graph[product.name] = {{{}, {}}, false}
+	end
+	
+	return items, orderer
+end
+
+-- Create the update order
+function order(items, orderer, debuggery)
+	while table.count(items) > 0 do
+		for i=table.count(items), 1, -1 do
+			if can_be_ordered(orderer, orderer[items[i]]) then
+				orderer[items[i]][2] = true
+				table.remove(items, i)
+				table.insert(item_order, items[i])
 			end
-			
-			-- Add recipe ingredients to product's ingredients
-			table.insert(graph[product.name][1][1], ingredients)
 		end
 	end
-	
-	return graph
 end
 
--- Check if ingredients are in order
-function ingredients_are_ordered(graph, ingredients, debuggery)
-	-- For each ingredient...
-	for __, ingredient in pairs(ingredients) do
-		-- If ingredient is not in order return false
-		if not graph[ingredient][2] then
-			return false
-		end
-	end
-	
-	-- All ingredients are in order
-	return true
-end
-
--- Check if any recipe can be ordered
-function can_be_ordered(graph, recipes, debuggery)
-	-- If there are no recipes, then return true	
-	if table.count(recipes) == 0 then
-		return true
-	end
-	
-	-- For each recipe...
-	for __, recipe in pairs(recipes) do
-		-- If recipe can be ordered return true
-		if ingredients_are_ordered(graph, recipe) then
+function can_be_ordered(orderer, to_be_ordered)
+	for __, ingredients in pairs(to_be_ordered[1]) do
+		if ingredient_check(orderer, ingredients) then
 			return true
 		end
 	end
-	-- All recipes cannot be orderd
+	
 	return false
 end
 
--- Assess this item and put in order
-function assess_item(graph, item, avoidances, debuggery)
-	if max_runs > 0 then
-		max_runs = max_runs - 1
-		-- Assess all items below
-		move_down(graph, item, avoidances, debuggery)
-	
-		-- If this item can be put in the order...
-		if can_be_ordered(graph, graph[item][1][1], debuggery) then
-			-- Mark as ordered, add to item order, and move up
-			graph[item][2] = true
-			table.insert(item_order, item)
-			debuggery.add({type = "label", name = next_name(), caption = "Item ordered: " .. item})
-		else
-			debuggery.add({type = "label", name = next_name(), caption = "Item not placed: " .. item})
+function ingredient_check(orderer, ingredients)
+	for __, ingredient in pairs(ingredients) do
+		if not orderer[ingredient][2] then
+			return false
 		end
-		-- Assess all items above
-		move_up(graph, item, avoidances, debuggery)
 	end
+	return true
 end
 
--- Move up in graph from node(item)
-function move_up(graph, item, avoidances, debuggery)
-	debuggery.add({type = "label", name = next_name(), caption = "move_up from: " .. item})
-	if table.count(graph[item][1][2]) ~= 0 then
-		for __, product in pairs(graph[item][1][2]) do
-			if not (table.contains_value(avoidances, product) or graph[product][2]) then
-				debuggery.add({type = "label", name = next_name(), caption = "move_up to: " .. product})
-				assess_item(graph, product, avoidances, debuggery)
-			else
-				if graph[product][2] then
-					debuggery.add({type = "label", name = next_name(), caption = product .. " is already ordered"})
-				else
-					debuggery.add({type = "label", name = next_name(), caption = product .. " is being avoided"})
-				end
-			end
+-- Check if any product is in the orderer
+function is_hidden(orderer, recipe)
+	for __, product in pairs(recipe.products) do
+		if orderer[product.name] then
+			return false
 		end
-	else
-		--debuggery.add({type = "label", name = next_name(), caption = 
 	end
-end
-
--- Move down in graph from node(item)
-function move_down(graph, item, avoidances, debuggery)
-	debuggery.add({type = "label", name = next_name(), caption = "move_down from: " .. item})
-	table.insert(avoidances, item)
-	debuggery.add({type = "label", name = next_name(), caption = item .. " added to avoidances"})
-	for __, recipe in pairs(graph[item][1][1]) do
-			for __, ingredient in pairs(recipe) do
-				if not (table.contains_value(avoidances, ingredient) or graph[ingredient][2]) then
-					move_down(graph, ingredient, avoidances, debuggery)
-				els?fr
-					if graph[ingredient][2] then
-						debuggery.add({type = "label", name = next_name(), caption = ingredient .. " is already ordered"})
-					else
-						debuggery.add({type = "label", name = next_name(), caption = ingredient .. " is being avoided"})
-					end
-				end
-			end
-		end
-	table.remove(avoidances)
-	debuggery.add({type = "label", name = next_name(), caption = item .. " removed from avoidances"})
+	return true
 end
 
 -- Count the number of items in table
