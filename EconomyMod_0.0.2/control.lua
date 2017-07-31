@@ -66,7 +66,8 @@ function build_orderer(debuggery)
 			
 			-- For each product...
 			for __, product in pairs(recipe.products) do
-				if orderer[product.name] then
+				--debuggery.add({type = "label", name = next_name(), caption = (product.name .. "-barrel")})
+				if orderer[product.name] and not ingredients[1] == (product.name .. "-barrel")then
 					-- Add recipe ingredients to products's ingredients
 					table.insert(orderer[product.name][1], ingredients)
 				end
@@ -79,33 +80,38 @@ end
 
 -- Create the update order
 function order(items, orderer, debuggery)
-	local debugg = 100
+	local debugg = 1
 	--local debugg2 = 5
 	
 	for j=1, debugg do
 	--while table.count(items) > 0 do
-		for i=table.count(items), 0, -1 do
-			if not orderer[items[i]] then
-				debuggery.add({type = "label", name = next_name(), caption = items[i]})
-			else
-				if can_be_ordered(orderer, orderer[items[i]], debuggery) then
-					orderer[items[i]][2] = true
-					table.insert(item_order, items[i])
-					table.remove(items, i)
-				end
+		for i=table.count(items), 1, -1 do
+			if can_be_ordered(orderer, orderer[items[i]], debuggery) then
+				orderer[items[i]][2] = true
+				table.insert(item_order, items[i])
+				table.remove(items, i)
+			end
+			if items[i] == "crude-oil" then
+				debuggery.add({type = "label", name = next_name(), caption = "crude-oil: " .. table.tostring(orderer[items[i]])})
+			elseif items[i] == "water" then
+				debuggery.add({type = "label", name = next_name(), caption = "water: " .. table.tostring(orderer[items[i]])})
 			end
 		end
 		
-		--local cap = ""
-		--for __, item in pairs(items) do
-		--	cap = cap .. item .. ", "
-		--end
+		local cap = ""
+		for __, item in pairs(items) do
+			cap = cap .. item .. ", "
+		end
 		
-		--debuggery.add({type = "label", name = next_name(), caption = cap})
+		debuggery.add({type = "label", name = next_name(), caption = cap})
 	end
 end
 
 function can_be_ordered(orderer, to_be_ordered, debuggery)	
+	if table.count(to_be_ordered[1]) == 0 then
+		return true
+	end
+	
 	for __, ingredients in pairs(to_be_ordered[1]) do
 		if ingredient_check(orderer, ingredients) then
 			return true
