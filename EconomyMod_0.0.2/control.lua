@@ -22,15 +22,8 @@ function test_open(player)
 	-- inout: {{ingredients}, {products}}
 	local inout = {}
 	
-	-- Make table of recipes that are not hidden
-	for recipe_name, recipe in pairs(game.recipe_prototypes) do
-		if recipe.hidden == false then
-		debuggery.add({type = "label", name = next_name, caption = table.tostring({recipe.ingredients, recipe.products})})
-		table.insert(inout, {recipe.ingredients, recipe.products})
-		end
-	end
-	
-	order(build_orderer(debuggery), debuggery)
+	local items, orderer = build_orderer(debuggery)
+	order(items, orderer, debuggery)
 	
 	--local count = table.count(item_order)
 	
@@ -53,6 +46,11 @@ function build_orderer(debuggery)
 		end
 	end
 	
+	for __, fluid in pairs(game.fluid_prototypes) do
+		orderer[fluid.name] = {{}, false}
+		table.insert(items, fluid.name)
+	end
+	
 	-- For each recipe...
 	for __, recipe in pairs(game.recipe_prototypes) do
 		-- Ingredients for this recipe
@@ -61,7 +59,7 @@ function build_orderer(debuggery)
 			local ingredients = {}
 		
 			-- For each ingredient...
-			for __, ingredient in pairs(inout[i][1]) do
+			for __, ingredient in pairs(recipe.ingredients) do
 				-- Add to table of ingredients
 				table.insert(ingredients, ingredient.name)
 			end
@@ -81,18 +79,33 @@ end
 
 -- Create the update order
 function order(items, orderer, debuggery)
-	while table.count(items) > 0 do
-		for i=table.count(items), 1, -1 do
-			if can_be_ordered(orderer, orderer[items[i]]) then
-				orderer[items[i]][2] = true
-				table.remove(items, i)
-				table.insert(item_order, items[i])
+	local debugg = 100
+	--local debugg2 = 5
+	
+	for j=1, debugg do
+	--while table.count(items) > 0 do
+		for i=table.count(items), 0, -1 do
+			if not orderer[items[i]] then
+				debuggery.add({type = "label", name = next_name(), caption = items[i]})
+			else
+				if can_be_ordered(orderer, orderer[items[i]], debuggery) then
+					orderer[items[i]][2] = true
+					table.insert(item_order, items[i])
+					table.remove(items, i)
+				end
 			end
 		end
+		
+		--local cap = ""
+		--for __, item in pairs(items) do
+		--	cap = cap .. item .. ", "
+		--end
+		
+		--debuggery.add({type = "label", name = next_name(), caption = cap})
 	end
 end
 
-function can_be_ordered(orderer, to_be_ordered)
+function can_be_ordered(orderer, to_be_ordered, debuggery)	
 	for __, ingredients in pairs(to_be_ordered[1]) do
 		if ingredient_check(orderer, ingredients) then
 			return true
@@ -143,7 +156,6 @@ end
 -- Get next name
 function next_name()
 	frame_name = frame_name + 1
-	--if frame_name > 100 then frame_name = 0 end
 	return frame_name
 end
 
