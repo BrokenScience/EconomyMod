@@ -27,11 +27,11 @@ function test_open(player)
 	
 	--local count = table.count(item_order)
 	
-	--for i=1, count do
-	--	frame.add({type = "label", name = next_name(), caption = item_order[i]})
-	--end
+	for __, item in pairs(item_order) do
+		frame.add({type = "label", name = next_name(), caption = item})
+	end
 	
-	--frame.add({type = "label", name = next_name(), caption = count})
+	frame.add({type = "label", name = next_name(), caption = table.count(item_order)})
 end
 
 -- Order all items
@@ -67,8 +67,10 @@ function build_orderer(debuggery)
 			-- For each product...
 			for __, product in pairs(recipe.products) do
 				--debuggery.add({type = "label", name = next_name(), caption = (product.name .. "-barrel")})
-				if orderer[product.name] and not ingredients[1] == (product.name .. "-barrel")then
+				--debuggery.add({type = "label", name = next_name(), caption = ingredients[1]})
+				if orderer[product.name] and not (ingredients[1] == (product.name .. "-barrel"))then
 					-- Add recipe ingredients to products's ingredients
+					--debuggery.add({type = "label", name = next_name(), caption = product.name})
 					table.insert(orderer[product.name][1], ingredients)
 				end
 			end
@@ -80,22 +82,22 @@ end
 
 -- Create the update order
 function order(items, orderer, debuggery)
-	local debugg = 1
+	--local debugg = 100
 	--local debugg2 = 5
 	
-	for j=1, debugg do
-	--while table.count(items) > 0 do
+	--for j=1, debugg do
+	while table.count(items) > 0 do
 		for i=table.count(items), 1, -1 do
 			if can_be_ordered(orderer, orderer[items[i]], debuggery) then
 				orderer[items[i]][2] = true
 				table.insert(item_order, items[i])
 				table.remove(items, i)
 			end
-			if items[i] == "crude-oil" then
-				debuggery.add({type = "label", name = next_name(), caption = "crude-oil: " .. table.tostring(orderer[items[i]])})
-			elseif items[i] == "water" then
-				debuggery.add({type = "label", name = next_name(), caption = "water: " .. table.tostring(orderer[items[i]])})
-			end
+			--if items[i] == "crude-oil" then
+			--	debuggery.add({type = "label", name = next_name(), caption = "crude-oil: " .. table.tostring(orderer[items[i]])})
+			--elseif items[i] == "water" then
+			--	debuggery.add({type = "label", name = next_name(), caption = "water: " .. table.tostring(orderer[items[i]])})
+			--end
 		end
 		
 		local cap = ""
