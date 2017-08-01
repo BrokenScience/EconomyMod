@@ -4,6 +4,7 @@ function build_orderer()--debuggery)
 	
 	-- orderer: product.name = {{ingredients}, is_ordered}
 	local orderer = {}
+	-- items: {item.name}
 	local items = {}
 	for __, item in pairs(game.item_prototypes) do
 		if not item.has_flag("hidden") then
@@ -24,19 +25,19 @@ function build_orderer()--debuggery)
 		
 			local ingredients = {}
 		
-			-- For each ingredient...
+			-- For each ingredient in recipe...
 			for __, ingredient in pairs(recipe.ingredients) do
 				-- Add to table of ingredients
 				table.insert(ingredients, ingredient.name)
 			end
 			
-			-- For each product...
+			-- For each product in recipe...
 			for __, product in pairs(recipe.products) do
 				--debuggery.add({type = "label", name = next_name(), caption = (product.name .. "-barrel")})
 				--debuggery.add({type = "label", name = next_name(), caption = ingredients[1]})
 				if orderer[product.name] and not (ingredients[1] == (product.name .. "-barrel"))then
-					-- Add recipe ingredients to products's ingredients
 					--debuggery.add({type = "label", name = next_name(), caption = product.name})
+					-- Add ingredients to products's ingredients
 					table.insert(orderer[product.name][1], ingredients)
 				end
 			end
@@ -75,6 +76,7 @@ function order(items, orderer)--, debuggery)
 	end
 end
 
+-- Check if all ingredients of any recipe are in item_order
 function can_be_ordered(orderer, to_be_ordered)--, debuggery)	
 	if table.count(to_be_ordered[1]) == 0 then
 		return true
@@ -89,6 +91,7 @@ function can_be_ordered(orderer, to_be_ordered)--, debuggery)
 	return false
 end
 
+-- Check if all ingredients in a recipe are in item_order
 function ingredient_check(orderer, ingredients)
 	for __, ingredient in pairs(ingredients) do
 		if not orderer[ingredient][2] then
@@ -98,7 +101,7 @@ function ingredient_check(orderer, ingredients)
 	return true
 end
 
--- Check if any product is in the orderer
+-- Check if a product is not in the orderer
 function is_hidden(orderer, recipe)
 	for __, product in pairs(recipe.products) do
 		if orderer[product.name] then
