@@ -4,8 +4,8 @@ require("code.ordering")
 if not item_order then item_order = {} end
 -- frame_name: variable to hold name of next print label in debuggery
 if not frame_name then frame_name = 0 end
--- market: item.name = {{producer, {ingredient.name, # required}, # produced, weight, time}, price, velocity, constant}
-if not market then market = {}
+-- market: item.name = {{producer, constant, {ingredient.name, # required}, # produced, weight, time}, price, velocity}
+if not market then market = {} end
 
 script.on_init(build_orderer)
 
@@ -28,9 +28,13 @@ function test_open(player)
 	local frame = main_frame.add({type = "scroll-pane", name = "test-scroll", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
-	for __, item in pairs(item_order) do
-		frame.add({type = "label", name = next_name(), caption = item})
+	for __, recipe in pairs(game.recipe_prototypes) do
+		frame.add({type = "label", name = next_name(), caption = table.tostring(recipe)})
 	end
+	
+	--for __, item in pairs(item_order) do
+	--	frame.add({type = "label", name = next_name(), caption = item})
+	--end
 	
 	--frame.add({type = "label", name = next_name(), caption = table.count(item_order)})
 end
