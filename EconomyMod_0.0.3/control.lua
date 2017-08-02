@@ -40,7 +40,7 @@ function test_open(player)
 end
 
 function update_prices()
-	
+
 end
 
 -- Count the number of items in table (-1 if not a table)
