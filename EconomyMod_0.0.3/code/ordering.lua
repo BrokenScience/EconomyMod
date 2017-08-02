@@ -8,8 +8,17 @@ function build_orderer()--debuggery)
 	local items = {}
 	for __, item in pairs(game.item_prototypes) do
 		if not item.has_flag("hidden") then
-			orderer[item.name] = {{}, false}
+			if not orderer[item.name] then
+				orderer[item.name] = {{}, false}
+			end
 			table.insert(items, item.name)
+			if item.burnt_result then
+				if orderer[item.burnt_result] then
+					table.insert(orderer[item.burnt_result][1], {item.name})
+				else
+					orderer[item.burnt_result] = {{{item.name}}, false}
+				end
+			end
 		end
 	end
 	

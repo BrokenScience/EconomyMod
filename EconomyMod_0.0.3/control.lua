@@ -28,9 +28,7 @@ function test_open(player)
 	local frame = main_frame.add({type = "scroll-pane", name = "test-scroll", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
-	for __, recipe in pairs(game.recipe_prototypes) do
-		frame.add({type = "label", name = next_name(), caption = table.tostring(recipe)})
-	end
+	
 	
 	--for __, item in pairs(item_order) do
 	--	frame.add({type = "label", name = next_name(), caption = item})
