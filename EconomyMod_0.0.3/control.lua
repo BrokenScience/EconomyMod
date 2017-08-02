@@ -1,7 +1,11 @@
 require("code.ordering")
 
+-- item_order: {item.name}
 if not item_order then item_order = {} end
+-- frame_name: variable to hold name of next print label in debuggery
 if not frame_name then frame_name = 0 end
+-- market: item.name = {{producer, {ingredient.name, # required}, # produced, weight, time}, price, velocity, constant}
+if not market then market = {}
 
 script.on_init(build_orderer)
 
@@ -22,7 +26,7 @@ end)
 function test_open(player)
 	local main_frame = player.gui.center.add({type = "frame", name = "test", direction = "vertical"})
 	local frame = main_frame.add({type = "scroll-pane", name = "test-scroll", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
-	--local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
+	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
 	for __, item in pairs(item_order) do
 		frame.add({type = "label", name = next_name(), caption = item})
@@ -31,13 +35,15 @@ function test_open(player)
 	--frame.add({type = "label", name = next_name(), caption = table.count(item_order)})
 end
 
-
+function update_prices()
+	
+end
 
 -- Count the number of items in table (-1 if not a table)
 function table.count(t)
-	--if not (type(t) == "table") then	
-	--	return -1
-	--end
+	if not (type(t) == "table") then	
+		return -1
+	end
 	local count = 0
 	for k, v in pairs(t) do
 		count = count + 1
