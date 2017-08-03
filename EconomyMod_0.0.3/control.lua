@@ -4,12 +4,16 @@ require("code.ordering")
 if not item_order then item_order = {} end
 -- frame_name: variable to hold name of next print label in debuggery
 if not frame_name then frame_name = 0 end
--- market: item.name = {{producer, constant, {ingredient.name, # required}, # produced, weight, time}, price, velocity}
+-- market: item.name = price, velocity, {producer, {ingredient.name, # required}, # produced, weight, time}, constant
 if not market then market = {} end
 
-script.on_init(build_orderer)
+script.on_init(init)
 
-script.on_configuration_changed(build_orderer)
+script.on_configuration_changed(init)
+
+function init()
+	build_order()
+end
 
 -- Test gui control
 script.on_event("Eco", function(event)

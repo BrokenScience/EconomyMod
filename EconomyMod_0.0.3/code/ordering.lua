@@ -1,5 +1,5 @@
 -- Order all items
-function build_orderer()--debuggery)
+function build_order()--debuggery)
 	item_order = {}
 	
 	-- orderer: product.name = {{ingredients}, is_ordered}
@@ -13,10 +13,10 @@ function build_orderer()--debuggery)
 			end
 			table.insert(items, item.name)
 			if item.burnt_result then
-				if orderer[item.burnt_result] then
+				if orderer[item.burnt_result.name] then
 					table.insert(orderer[item.burnt_result][1], {item.name})
 				else
-					orderer[item.burnt_result] = {{{item.name}}, false}
+					orderer[item.burnt_result.name] = {{{item.name}}, false}
 				end
 			end
 		end
