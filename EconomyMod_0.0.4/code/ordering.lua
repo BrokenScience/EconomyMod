@@ -42,10 +42,10 @@ function build_order()
 			
 			-- For each product in recipe...
 			for __, product in pairs(recipe.products) do
-				--debuggery.add((product.name .. "-barrel"))
-				--debuggery.add(ingredients[1])
+				--print_in_debuggery((product.name .. "-barrel"))
+				--print_in_debuggery(ingredients[1])
 				if orderer[product.name] and not (ingredients[1] == (product.name .. "-barrel"))then
-					--debuggery.add(product.name)
+					--print_in_debuggery(product.name)
 					-- Add ingredients to products's ingredients
 					table.insert(orderer[product.name][1], ingredients)
 				end
@@ -70,9 +70,9 @@ function order(items, orderer)
 				table.remove(items, i)
 			end
 			--if items[i] == "crude-oil" then
-			--	debuggery.add("crude-oil: " .. table.tostring(orderer[items[i]])})
+			--	print_in_debuggery("crude-oil: " .. table.tostring(orderer[items[i]])})
 			--elseif items[i] == "water" then
-			--	debuggery.add("water: " .. table.tostring(orderer[items[i]]))
+			--	print_in_debuggery("water: " .. table.tostring(orderer[items[i]]))
 			--end
 		end
 		
@@ -81,7 +81,7 @@ function order(items, orderer)
 			cap = cap .. item .. ", "
 		end
 		
-		debuggery.add(cap)
+		print_in_debuggery(cap)
 	end
 end
 
