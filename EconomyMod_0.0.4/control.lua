@@ -6,6 +6,8 @@ if not item_order then item_order = {} end
 if not frame_name then frame_name = 0 end
 -- market: item.name = price, velocity, {producer, {ingredient.name, # required}, # produced, weight, time}, constant
 if not market then market = {} end
+-- debuggery: {type = "label", name = next_name(), caption = "Message Here"}
+if not debuggery then debuggery = {} end
 
 script.on_init(init)
 
@@ -18,7 +20,6 @@ end
 -- Test gui control
 script.on_event("Eco", function(event)
 	local player = game.players[event.player_index]
-	
 	if player.gui.center.test then
 		player.gui.center.test.destroy()
 	else
@@ -28,15 +29,20 @@ end)
 
 -- Opens test gui
 function test_open(player)
+	build_order()
+	
 	local main_frame = player.gui.center.add({type = "frame", name = "test", direction = "vertical"})
 	local frame = main_frame.add({type = "scroll-pane", name = "test-scroll", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
-	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
+	local deb = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
 	
-	
-	--for __, item in pairs(item_order) do
-	--	frame.add({type = "label", name = next_name(), caption = item})
+	--for __, message in pairs(debuggery) do
+	--	deb.add(message)
 	--end
+	
+	for __, item in pairs(item_order) do
+		frame.add({type = "label", name = next_name(), caption = item})
+	end
 	
 	--frame.add({type = "label", name = next_name(), caption = table.count(item_order)})
 end
@@ -67,10 +73,14 @@ function table.contains_value(t, value)
 	return false
 end
 
+function debuggery.add(message)
+	table.insert(debuggery, {type = "label", name = next_name(), caption = message})
+end
+
 -- Get next name
 function next_name()
 	frame_name = frame_name + 1
-	return frame_name
+	return tostring(frame_name)
 end
 
 -- debug: table to readable string (found at http://lua-users.org/wiki/TableUtils )

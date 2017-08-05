@@ -1,5 +1,5 @@
 -- Order all items
-function build_order()--debuggery)
+function build_order()
 	item_order = {}
 	
 	-- orderer: product.name = {{ingredients}, is_ordered}
@@ -42,10 +42,10 @@ function build_order()--debuggery)
 			
 			-- For each product in recipe...
 			for __, product in pairs(recipe.products) do
-				--debuggery.add({type = "label", name = next_name(), caption = (product.name .. "-barrel")})
-				--debuggery.add({type = "label", name = next_name(), caption = ingredients[1]})
+				--debuggery.add((product.name .. "-barrel"))
+				--debuggery.add(ingredients[1])
 				if orderer[product.name] and not (ingredients[1] == (product.name .. "-barrel"))then
-					--debuggery.add({type = "label", name = next_name(), caption = product.name})
+					--debuggery.add(product.name)
 					-- Add ingredients to products's ingredients
 					table.insert(orderer[product.name][1], ingredients)
 				end
@@ -57,7 +57,7 @@ function build_order()--debuggery)
 end
 
 -- Create the update order
-function order(items, orderer)--, debuggery)
+function order(items, orderer)
 	--local debugg = 100
 	--local debugg2 = 5
 	
@@ -70,9 +70,9 @@ function order(items, orderer)--, debuggery)
 				table.remove(items, i)
 			end
 			--if items[i] == "crude-oil" then
-			--	debuggery.add({type = "label", name = next_name(), caption = "crude-oil: " .. table.tostring(orderer[items[i]])})
+			--	debuggery.add("crude-oil: " .. table.tostring(orderer[items[i]])})
 			--elseif items[i] == "water" then
-			--	debuggery.add({type = "label", name = next_name(), caption = "water: " .. table.tostring(orderer[items[i]])})
+			--	debuggery.add("water: " .. table.tostring(orderer[items[i]]))
 			--end
 		end
 		
@@ -81,12 +81,12 @@ function order(items, orderer)--, debuggery)
 			cap = cap .. item .. ", "
 		end
 		
-		--debuggery.add({type = "label", name = next_name(), caption = cap})
+		debuggery.add(cap)
 	end
 end
 
 -- Check if all ingredients of any recipe are in item_order
-function can_be_ordered(orderer, to_be_ordered)--, debuggery)	
+function can_be_ordered(orderer, to_be_ordered)	
 	if table.count(to_be_ordered[1]) == 0 then
 		return true
 	end
