@@ -56,8 +56,8 @@ function build_eco()
 	local tech_order = order_tech()
 	
 	if table.count(tech_order) > 0 then
-		for k, __ in pairs(tech_order) do
-			print_in_debuggery(k)
+		for __, tech in pairs(tech_order) do
+			print_in_debuggery(tech.name)
 		end
 	else
 		error("no techs in tech order")
@@ -66,12 +66,17 @@ end
 
 -- Put the techs in order based on pack counts, time, and prerequisites
 function order_tech()
-	local tech_order = {}
+	-- order: # = LuaTechnologyPrototype.Name
+	local order = {}
+	-- techs: LuaTechnologyPrototype.Name = {LuaTechnologyPrototype, cost, is_ordered}
 	local techs = {}
 	
 	for k, tech in pairs(game.technology_prototypes) do
 		local count = 0
 		local amount = 0
+		--for __, prerequisite in pairs(tech.prerequisites) do
+		--	print_in_debuggery(prerequisite.name)
+		--end
 		
 		for __, ingredient in pairs(tech.research_unit_ingredients) do
 			count = count + 1
@@ -79,36 +84,40 @@ function order_tech()
 		end
 		
 		techs[k] = {tech, amount / count * tech.research_unit_count * tech.research_unit_energy, false}
+		--print_in_debuggery(techs[k][2])
 	end
 	
 	local left = table.count(techs)
-	
+	--print_in_debuggery(tostring(left))
+
 	while left > 0 do
 		local met = {}
 		for k, tech in pairs(techs) do
 			if not tech[3] then
-				if prerequisites_met(techs, k) then
+				if prerequisites_met(techs, tech[1].prerequisites) then
+					--print_in_debuggery(tech[1].name .. " has prerequisites_met")
 					table.insert(met, {tech[2], k})
 				end
 			end
 		end
 		
-		print_in_debuggery(table.tostring(met))
 		met = determine_next_tech(met)
-		print_in_debuggery(table.tostring(met))
-		table.insert(tech_order, techs[met[2]][1])
+		table.insert(order, techs[met[2]][1])
 		techs[met[2]][3] = true
 		left = left - 1
 	end
+	
+	return order
 end
 
-function prerequisites_met(techs, k)
-	if table.count(techs[k].prerequisites) == 0 then
+function prerequisites_met(techs, prerequisites)
+	--print_in_debuggery(table.tostring(prerequisites))
+	if table.count(prerequisites) == 0 then
 		return true
 	end
 	
-	for __, prerequisite in pairs(techs[k].prerequisites) do
-		if not tech[prerequisite][3] then
+	for __, prerequisite in pairs(prerequisites) do
+		if not techs[prerequisite.name][3] then
 			return false
 		end
 	end
