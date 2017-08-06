@@ -52,15 +52,57 @@ function test_open(player)
 end
 
 function build_eco()
-	--local recipe_categories = link_recipe_categories()
-	local tech_order = order_tech()
+	local recipe_categories = link_recipe_categories()
+	--local tech_order = order_tech()
 	
 	if table.count(tech_order) > 0 then
 		for __, tech in pairs(tech_order) do
 			print_in_debuggery(tech.name)
 		end
-	else
-		error("no techs in tech order")
+	end
+end
+
+-- Link each recipe to its appropriate constructor entity
+function link_recipe_categories()
+	-- crafting_categories: category = entities(lowest to highest crafting_speed)
+	local crafting_cats = {}
+	
+	for __, entity in pairs(game.entity_prototypes) do
+		if entity.crafting_speed then
+			for category, enabled in pairs(entity.crafting_categories) do
+				if enabled then
+					if not crafting_cats[category] then
+						crafting_cats[category] = {}
+					end
+					table.insert(crafting_cats[category], {entity.name, entity.crafting_speed, entity.max_energy_usage})
+				end
+			end
+		end
+	end
+	
+	for category, entities in pairs(crafting_cats) do
+		if table.count(entities) >= 2 then
+			for i=1, table.count(entities) do
+				for j=i, 2, -1 do
+					if entities[j][2] < entities[j-1][2] then
+						local temp = entities[j]
+						entities[j] = entities[j-1]
+						entities[j-1] = temp
+					else
+						break
+					end
+				end
+			end
+		end
+	end
+	
+	for category, entities in pairs(crafting_cats) do
+		local cap = category .. ": "
+		for __, entity in pairs(entities) do
+			cap = cap .. entity[1] .. ", "
+		end
+		
+		print_in_debuggery(cap)
 	end
 end
 
