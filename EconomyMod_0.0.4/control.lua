@@ -1,10 +1,10 @@
 require("code.ordering")
 
--- item_order: {item.name}
+-- item_order: # = item.name
 if not item_order then item_order = {} end
--- frame_name: variable to hold name of next print label in debuggery
+-- frame_name: variable to hold name of next print label for debuggery
 if not frame_name then frame_name = 0 end
--- market: item.name = price, velocity, {producer, {ingredient.name, # required}, # produced, weight, time}, constant
+-- market: item.name = price, velocity, {producer, {ingredient.name, # required}, # produced, tech_tier, time}, constant
 if not market then market = {} end
 -- debuggery: {type = "label", name = next_name(), caption = "Message Here"}
 if not debuggery then debuggery = {} end
@@ -52,8 +52,16 @@ function test_open(player)
 end
 
 function build_eco()
+	--
 	local recipe_categories = link_recipe_categories()
-	--local tech_order = order_tech()
+	-- tech_order: # = tech
+	local tech_order = order_tech()
+	
+	-- Assign tech_tier
+	for i=1, table.count(tech_order) do
+		for __, modifier in pairs(tech_order[i].effects) do
+			if modifier.type == "unlock-recipe" then
+				recipe_categories[modifier.recipe][
 	
 	if table.count(tech_order) > 0 then
 		for __, tech in pairs(tech_order) do
@@ -67,6 +75,7 @@ function link_recipe_categories()
 	-- crafting_categories: category = entities(lowest to highest crafting_speed)
 	local crafting_cats = {}
 	
+	-- Each entity with a crafting speed is a crafter. Add each crafter to all categories it can craft.
 	for __, entity in pairs(game.entity_prototypes) do
 		if entity.crafting_speed then
 			for category, enabled in pairs(entity.crafting_categories) do
@@ -80,6 +89,7 @@ function link_recipe_categories()
 		end
 	end
 	
+	-- order crafters based on crafting speed, low to high
 	for category, entities in pairs(crafting_cats) do
 		if table.count(entities) >= 2 then
 			for i=1, table.count(entities) do
@@ -96,21 +106,31 @@ function link_recipe_categories()
 		end
 	end
 	
-	for category, entities in pairs(crafting_cats) do
-		local cap = category .. ": "
-		for __, entity in pairs(entities) do
-			cap = cap .. entity[1] .. ", "
+	local market_recipes = {}
+	
+	for __, recipe in pairs(game.recipe_prototypes) do 
+		local ingredients = {}
+		
+		for __, ingredient in pairs(recipe.ingredients) do
+			table.insert(ingredients, {ingredient.name, ingredient.amount})
 		end
 		
-		print_in_debuggery(cap)
+		local products = {}
+		
+		for __, product in pairs(recipe.products) do
+			table.insert(products, {product.name, product.amount})
+		
+		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 0, recipe.energy}
 	end
+	
+	return market_recipes
 end
 
 -- Put the techs in order based on pack counts, time, and prerequisites
 function order_tech()
-	-- order: # = LuaTechnologyPrototype.Name
+	-- order: # = LuaTechnologyPrototype
 	local order = {}
-	-- techs: LuaTechnologyPrototype.Name = {LuaTechnologyPrototype, cost, is_ordered}
+	-- techs: LuaTechnologyPrototype.name = {LuaTechnologyPrototype, cost, is_ordered}
 	local techs = {}
 	
 	for k, tech in pairs(game.technology_prototypes) do
@@ -125,7 +145,7 @@ function order_tech()
 			amount = amount + ingredient.amount
 		end
 		
-		techs[k] = {tech, amount / count * tech.research_unit_count * tech.research_unit_energy, false}
+		techs[k] = {tech, count * count / amount * tech.research_unit_count * tech.research_unit_energy, false}
 		--print_in_debuggery(techs[k][2])
 	end
 	
@@ -133,6 +153,7 @@ function order_tech()
 	--print_in_debuggery(tostring(left))
 
 	while left > 0 do
+		-- met: # = {value, tech.name}
 		local met = {}
 		for k, tech in pairs(techs) do
 			if not tech[3] then
@@ -142,7 +163,7 @@ function order_tech()
 				end
 			end
 		end
-		
+		-- met = {best.value, best.tech.name}
 		met = determine_next_tech(met)
 		table.insert(order, techs[met[2]][1])
 		techs[met[2]][3] = true
@@ -181,7 +202,7 @@ function determine_next_tech(met)
 end
 
 
--- Count the number of items in table (-1 if not a table)
+-- Count the number of items in table (0 if not a table)
 function table.count(t)
 	if not (type(t) == "table") then	
 		return 0
