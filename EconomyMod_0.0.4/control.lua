@@ -66,15 +66,16 @@ function build_eco()
 		end
 	end
 	
+	---[[
 	if table.count(recipes) > 0 then
 		for name, recipe in pairs(recipes) do
 			local cap = name .. ": " .. table.tostring(recipe)
 			debuggery(cap)
 		end
-	end
+	end --]]
 	if table.count(tech_order) > 0 then
 		for __, tech in pairs(tech_order) do
-			debuggery(tech.name)
+			debuggery(table.tostring(tech))
 		end
 	end
 end
@@ -128,6 +129,7 @@ function link_recipe_categories()
 		
 		for __, product in pairs(recipe.products) do
 			table.insert(products, {product.name, product.amount})
+		end
 		
 		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 0, recipe.energy}
 	end
