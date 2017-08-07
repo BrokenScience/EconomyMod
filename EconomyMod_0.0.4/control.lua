@@ -2,12 +2,12 @@ require("code.ordering")
 
 -- item_order: # = item.name
 if not item_order then item_order = {} end
--- frame_name: variable to hold name of next print label for debuggery
+-- frame_name: variable to hold name of next print label for debug_messages
 if not frame_name then frame_name = 0 end
 -- market: item.name = price, velocity, {producer, {ingredient.name, # required}, # produced, tech_tier, time}, constant
 if not market then market = {} end
--- debuggery: {type = "label", name = next_name(), caption = "Message Here"}
-if not debuggery then debuggery = {} end
+-- debug_messages: # = "Message"
+if not debug_messages then debug_messages = {} end
 
 script.on_init(init)
 
@@ -32,15 +32,15 @@ end)
 function test_open(player)
 	local main_frame = player.gui.center.add({type = "frame", name = "test", direction = "vertical"})
 	local frame = main_frame.add({type = "scroll-pane", name = "test-scroll", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
-	local deb = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
+	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
-	debuggery = {}
+	debug_messages = {}
 	build_eco()
 	
-	deb.add({type = "label", name = next_name(), caption = table.count(debuggery)})
-	if table.count(debuggery) > 0 then
-		for __, message in pairs(debuggery) do
-			deb.add({type = "label", name = next_name(), caption = message})
+	if table.count(debug_messages) > 0 then
+	debuggery.add({type = "label", name = next_name(), caption = table.count(debug_messages)})
+		for __, message in pairs(debug_messages) do
+			debuggery.add({type = "label", name = next_name(), caption = message})
 		end
 	end
 	
@@ -52,8 +52,8 @@ function test_open(player)
 end
 
 function build_eco()
-	--
-	local recipe_categories = link_recipe_categories()
+	-- recipes: recipe.name = {producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy}
+	local recipes = link_recipe_categories()
 	-- tech_order: # = tech
 	local tech_order = order_tech()
 	
@@ -61,11 +61,20 @@ function build_eco()
 	for i=1, table.count(tech_order) do
 		for __, modifier in pairs(tech_order[i].effects) do
 			if modifier.type == "unlock-recipe" then
-				recipe_categories[modifier.recipe][
+				recipes[modifier.recipe][4] = i
+			end
+		end
+	end
 	
+	if table.count(recipes) > 0 then
+		for name, recipe in pairs(recipes) do
+			local cap = name .. ": " .. table.tostring(recipe)
+			debuggery(cap)
+		end
+	end
 	if table.count(tech_order) > 0 then
 		for __, tech in pairs(tech_order) do
-			print_in_debuggery(tech.name)
+			debuggery(tech.name)
 		end
 	end
 end
@@ -137,7 +146,7 @@ function order_tech()
 		local count = 0
 		local amount = 0
 		--for __, prerequisite in pairs(tech.prerequisites) do
-		--	print_in_debuggery(prerequisite.name)
+		--	debuggery(prerequisite.name)
 		--end
 		
 		for __, ingredient in pairs(tech.research_unit_ingredients) do
@@ -146,11 +155,11 @@ function order_tech()
 		end
 		
 		techs[k] = {tech, count * count / amount * tech.research_unit_count * tech.research_unit_energy, false}
-		--print_in_debuggery(techs[k][2])
+		--debuggery(techs[k][2])
 	end
 	
 	local left = table.count(techs)
-	--print_in_debuggery(tostring(left))
+	--debuggery(tostring(left))
 
 	while left > 0 do
 		-- met: # = {value, tech.name}
@@ -158,7 +167,7 @@ function order_tech()
 		for k, tech in pairs(techs) do
 			if not tech[3] then
 				if prerequisites_met(techs, tech[1].prerequisites) then
-					--print_in_debuggery(tech[1].name .. " has prerequisites_met")
+					--debuggery(tech[1].name .. " has prerequisites_met")
 					table.insert(met, {tech[2], k})
 				end
 			end
@@ -174,7 +183,7 @@ function order_tech()
 end
 
 function prerequisites_met(techs, prerequisites)
-	--print_in_debuggery(table.tostring(prerequisites))
+	--debuggery(table.tostring(prerequisites))
 	if table.count(prerequisites) == 0 then
 		return true
 	end
@@ -201,15 +210,15 @@ function determine_next_tech(met)
 	return best
 end
 
+-- GLOBAL HELPER METHODS
 
 -- Count the number of items in table (0 if not a table)
 function table.count(t)
-	if not (type(t) == "table") then	
-		return 0
-	end
 	local count = 0
-	for k, v in pairs(t) do
-		count = count + 1
+	if (type(t) == "table") then	
+		for k, v in pairs(t) do
+			count = count + 1
+		end
 	end
 	return count
 end
@@ -224,8 +233,9 @@ function table.contains_value(t, value)
 	return false
 end
 
-function print_in_debuggery(message)
-	table.insert(debuggery, message)
+-- Add a message to the debug print
+function debuggery(message)
+	table.insert(debug_messages, message)
 end
 
 -- Get next name

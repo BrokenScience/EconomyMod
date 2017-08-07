@@ -81,7 +81,7 @@ function order(items, orderer)
 			cap = cap .. item .. ", "
 		end
 		
-		print_in_debuggery(cap)
+		debuggery(cap)
 	end
 end
 
