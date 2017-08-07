@@ -116,6 +116,7 @@ function link_recipe_categories()
 		end
 	end
 	
+	-- market_recipes: recipe.name = {{producer.name, producer.crafting_speed, energy_consumption (watts), {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy}
 	local market_recipes = {}
 	
 	for __, recipe in pairs(game.recipe_prototypes) do 
