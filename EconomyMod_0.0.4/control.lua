@@ -93,7 +93,7 @@ function link_recipe_categories()
 					if not crafting_cats[category] then
 						crafting_cats[category] = {}
 					end
-					table.insert(crafting_cats[category], {entity.name, entity.crafting_speed, entity.max_energy_usage})
+					table.insert(crafting_cats[category], {entity.name, entity.crafting_speed, (entity.max_energy_usage / (50/3) * 1000)})
 				end
 			end
 		end
