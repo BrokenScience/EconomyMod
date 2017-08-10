@@ -69,11 +69,6 @@ function order(items, orderer)
 				table.insert(item_order, items[i])
 				table.remove(items, i)
 			end
-			--if items[i] == "crude-oil" then
-			--	print_in_debuggery("crude-oil: " .. table.tostring(orderer[items[i]])})
-			--elseif items[i] == "water" then
-			--	print_in_debuggery("water: " .. table.tostring(orderer[items[i]]))
-			--end
 		end
 		
 		local cap = ""

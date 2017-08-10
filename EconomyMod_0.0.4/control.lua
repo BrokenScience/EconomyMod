@@ -4,8 +4,20 @@ require("code.ordering")
 if not item_order then item_order = {} end
 -- frame_name: variable to hold name of next print label for debug_messages
 if not frame_name then frame_name = 0 end
--- market: item.name = price, velocity, {producer, {ingredient.name, # required}, # produced, tech_tier, time}, constant
+-- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, time} or constant
 if not market then market = {} end
+-- constants: item.name = #
+if not constants then constants = {
+	"iron-ore" = 1,
+	"copper-ore" = 1,
+	"coal" = 1,
+	"stone" = 1,
+	"raw-wood" = 1,
+	"uranium-ore" = 1,
+	"water" = 1,
+	"crude-oil" = 1
+	}
+end
 -- debug_messages: # = "Message"
 if not debug_messages then debug_messages = {} end
 
@@ -52,7 +64,7 @@ function test_open(player)
 end
 
 function build_eco()
-	-- recipes: recipe.name = {producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy}
+	-- recipes: recipe.name = producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy
 	local recipes = link_recipe_categories()
 	-- tech_order: # = tech
 	local tech_order = order_tech()
@@ -61,8 +73,16 @@ function build_eco()
 	for i=1, table.count(tech_order) do
 		for __, modifier in pairs(tech_order[i].effects) do
 			if modifier.type == "unlock-recipe" then
-				recipes[modifier.recipe][4] = i
+				recipes[modifier.recipe][4] = i + 1
 			end
+		end
+	end
+	
+	for __, item in pairs(item_order) do
+		if constants[item] then
+			market[item] = {0, 0, 0, 0, constants[item]}
+		else
+			market[item] = {0, 0, 0, 0, {}}
 		end
 	end
 	
@@ -132,7 +152,7 @@ function link_recipe_categories()
 			table.insert(products, {product.name, product.amount})
 		end
 		
-		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 0, recipe.energy}
+		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 1, recipe.energy}
 	end
 	
 	return market_recipes
@@ -230,6 +250,16 @@ end
 function table.contains_value(t, value)
 	for __, val in pairs(t) do
 		if val == value then
+			return true
+		end
+	end
+	return false
+end
+
+-- Check if a table contains a key
+function table.contains_key(t, key)
+	for k, __ in pairs(t) do
+		if k == key then
 			return true
 		end
 	end
