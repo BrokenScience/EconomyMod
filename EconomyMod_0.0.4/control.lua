@@ -6,8 +6,8 @@ if not item_order then item_order = {} end
 if not frame_name then frame_name = 0 end
 -- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, other products constant, time} or constant
 if not market then market = {} end
--- constants: item.name = #
-if not constants then constants = {
+-- resource_constants: item.name = #
+if not resource_constants then resource_constants = {
 	"energy" = .001,
 	"iron-ore" = 1,
 	"copper-ore" = 1,
@@ -17,6 +17,11 @@ if not constants then constants = {
 	"uranium-ore" = 1,
 	"water" = 1,
 	"crude-oil" = 1
+	}
+end
+-- other constants for non-item things
+if not arbitrary_constants then arbitrary_constants = {
+	
 	}
 end
 -- debug_messages: # = "Message"
@@ -98,8 +103,8 @@ function build_eco()
 		end
 	end
 	
-	-- Insert constants for raw-resources
-	for resource, constant in pairs(constants) do
+	-- Insert resource_constants for raw-resources
+	for resource, constant in pairs(resource_constants) do
 		market[resource][5] = constant
 	end
 	
@@ -202,39 +207,43 @@ function link_recipe_categories()
 		end
 		
 		-- Deal with multiple products
-		local combo = 1
-		if not recipe.products[1].probability or recipe.products[1].probability == 1 then
-		
-		end
-		elseif table.count(recipe.products) > 1 then
-			if has_catalyst(recipe) then
-				for i, ingredient in ipairs(ingredients) do
-					for j, product in ipairs(products) do
-						if ingredient[1] == product[1] then
-							
-			else
-				
-			end
-		end
+		if not recipe.products[1].probability == 1 and recipe.products[1].probability then
 			
+		elseif table.count(recipe.products) > 1 then
+			for __, ingredient in pairs(ingredients) do
+				for __, product in pairs(products) do
+					if ingredient[1] == product[1] then
+						if product[2] > ingredient[2] then
+							product[2] = product[2] - ingredient[2]
+							ingredient[2] = 0
+						else
+							ingredient[2] = ingredient[2] - product[2]
+							product[2] = 0
+						end
+					end
+				end			
+			end
+			
+			local combo = 0
+			
+			for __, product in pairs(products) do
+				combo = combo + 1 / product[2]
+			end
+			
+			combo = 1 / combo
+			
+			for __, product in pairs(products) do
+				product[3] = combo * 1 / product[2]
+			end
+		else
+			products[1][3] = 1
+		end
 		
-		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 1, combo, recipe.energy}
+		
+		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 1, recipe.energy}
 	end
 	
 	return market_recipes
-end
-
--- Check if recipe has a catalyst
-function has_catalyst(recipe)
-	for __, ingredient in pairs(recipe.ingredients) do
-		for __, product in pairs(recipe.products) do
-			if ingredient.name == product.name then
-				return true
-			end
-		end
-	end
-	
-	return false
 end
 
 -- Put the techs in order based on pack counts, time, and prerequisites
