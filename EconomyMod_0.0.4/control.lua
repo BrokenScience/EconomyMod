@@ -4,11 +4,11 @@ require("code.ordering")
 if not item_order then item_order = {} end
 -- frame_name: variable to hold name of next print label for debug_messages
 if not frame_name then frame_name = 0 end
--- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, other products constant, time} or constant
+-- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, time} or constant
 if not market then market = {} end
 -- resource_constants: item.name = #
 if not resource_constants then resource_constants = {
-	"energy" = .001,
+	"energy" = 1,
 	"iron-ore" = 1,
 	"copper-ore" = 1,
 	"coal" = 1,
@@ -71,7 +71,7 @@ function test_open(player)
 end
 
 function build_eco()
-	-- recipes: recipe.name = producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, combo_multiplier, time
+	-- recipes: recipe.name = producer, {ingredients or {ingredient, amount}}, {products or {product, amount, combo_coefficient}}, tech_tier, time
 	local recipes = link_recipe_categories()
 	-- tech_order: # = tech
 	local tech_order = order_tech()
@@ -97,8 +97,10 @@ function build_eco()
 	for __, recipe in pairs(recipes) do
 		for __, product in pairs(recipe[3]) do
 			-- Clear all other products out from recipe
+			-- simplified_recipe: # = 
 			local simplified_recipe = recipe
 			simplified_recipe[3] = product[2]
+			table.insert(simplified_recipe, 5, product[3])
 			table.insert(market[product[1]][5], simplified_recipe)
 		end
 	end
@@ -118,8 +120,8 @@ function build_eco()
 			
 			-- Change tech_level into the recipe weight coefficient
 			for __, recipe in pairs(item[5]) do
-				recipe[3] = (1 / recipe[3])
-				weight = weight + recipe[3]
+				recipe[4] = (1 / recipe[4])
+				weight = weight + recipe[4]
 			end
 			
 			-- Convert weight into item's weight coefficient
@@ -127,7 +129,8 @@ function build_eco()
 			
 			-- 
 			for __, recipe in pairs(item[5]) do
-				recipe[3] = recipe[3] * weight
+				recipe[4] = recipe[5] * recipe[4] * weight
+				table.remove(recipe, 5)
 			end
 		end
 	end
@@ -140,18 +143,19 @@ function build_eco()
 			for __, recipe in pairs(item[5]) do
 				price = price + recipe
 	
-	---[[
+	--[[
 	if table.count(recipes) > 0 then
 		for name, recipe in pairs(recipes) do
 			local cap = name .. ": " .. table.tostring(recipe)
 			debuggery(cap)
 		end
 	end --]]
+	--[[
 	if table.count(tech_order) > 0 then
 		for __, tech in pairs(tech_order) do
 			debuggery(table.tostring(tech))
 		end
-	end
+	end --]]
 end
 
 -- Link each recipe to its appropriate constructor entity
@@ -167,7 +171,7 @@ function link_recipe_categories()
 					if not crafting_cats[category] then
 						crafting_cats[category] = {}
 					end
-					table.insert(crafting_cats[category], {entity.name, entity.crafting_speed, (entity.max_energy_usage / (50/3) * 1000)})
+					table.insert(crafting_cats[category], {entity.name, entity.crafting_speed, (entity.max_energy_usage / (50/3))})
 				end
 			end
 		end
@@ -176,7 +180,7 @@ function link_recipe_categories()
 	-- order crafters based on crafting speed, low to high
 	for category, entities in pairs(crafting_cats) do
 		if table.count(entities) >= 2 then
-			for i=1, table.count(entities) do
+			for i=2, table.count(entities) do
 				for j=i, 2, -1 do
 					if entities[j][2] < entities[j-1][2] then
 						local temp = entities[j]
@@ -190,7 +194,7 @@ function link_recipe_categories()
 		end
 	end
 	
-	-- market_recipes: recipe.name = {{producer.name, producer.crafting_speed, energy_consumption (watts)}, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy}
+	-- market_recipes: recipe.name = {{producer.name, producer.crafting_speed, energy_consumption (kilowatts)}, {ingredients or {ingredient, amount}}, {products or {product, amount, combo_coefficient}}, tech_tier, time}
 	local market_recipes = {}
 	
 	for __, recipe in pairs(game.recipe_prototypes) do 
@@ -202,14 +206,22 @@ function link_recipe_categories()
 		
 		local products = {}
 		
-		for __, product in pairs(recipe.products) do
-			table.insert(products, {product.name, product.amount})
+		for i, product in ipairs(recipe.products) do
+			table.insert(products, {product.name, product.amount, 1})
 		end
 		
 		-- Deal with multiple products
 		if not recipe.products[1].probability == 1 and recipe.products[1].probability then
 			
-		elseif table.count(recipe.products) > 1 then
+			for i, product in ipairs(recipe.products) do
+				products[i][3] = 1 / product.probability - 1
+			end
+					
+		end
+		
+		-- For recipes with multiple products...
+		if table.count(recipe.products) > 1 then
+			-- Check if there are any catalysts and deal with them
 			for __, ingredient in pairs(ingredients) do
 				for __, product in pairs(products) do
 					if ingredient[1] == product[1] then
@@ -226,17 +238,18 @@ function link_recipe_categories()
 			
 			local combo = 0
 			
+			-- Calculate total number of all products
 			for __, product in pairs(products) do
 				combo = combo + 1 / product[2]
 			end
 			
+			-- Convert to combo multiplier
 			combo = 1 / combo
 			
+			-- Merge with possible probability coefficient
 			for __, product in pairs(products) do
-				product[3] = combo * 1 / product[2]
+				product[3] = product[3] * combo * 1 / product[2]
 			end
-		else
-			products[1][3] = 1
 		end
 		
 		

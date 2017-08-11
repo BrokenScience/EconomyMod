@@ -44,7 +44,7 @@ function build_order()
 			for __, product in pairs(recipe.products) do
 				--print_in_debuggery((product.name .. "-barrel"))
 				--print_in_debuggery(ingredients[1])
-				if orderer[product.name] and not (ingredients[1] == (product.name .. "-barrel"))then
+				if orderer[product.name] and not (ingredients[1] == (product.name .. "-barrel")) then
 					--print_in_debuggery(product.name)
 					-- Add ingredients to products's ingredients
 					table.insert(orderer[product.name][1], ingredients)
