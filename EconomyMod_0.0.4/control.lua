@@ -4,7 +4,7 @@ require("code.ordering")
 if not item_order then item_order = {} end
 -- frame_name: variable to hold name of next print label for debug_messages
 if not frame_name then frame_name = 0 end
--- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, time} or constant
+-- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, other products constant, time} or constant
 if not market then market = {} end
 -- constants: item.name = #
 if not constants then constants = {
@@ -66,7 +66,7 @@ function test_open(player)
 end
 
 function build_eco()
-	-- recipes: recipe.name = producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, time
+	-- recipes: recipe.name = producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, combo_multiplier, time
 	local recipes = link_recipe_categories()
 	-- tech_order: # = tech
 	local tech_order = order_tech()
@@ -201,10 +201,40 @@ function link_recipe_categories()
 			table.insert(products, {product.name, product.amount})
 		end
 		
-		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 1, recipe.energy}
+		-- Deal with multiple products
+		local combo = 1
+		if not recipe.products[1].probability or recipe.products[1].probability == 1 then
+		
+		end
+		elseif table.count(recipe.products) > 1 then
+			if has_catalyst(recipe) then
+				for i, ingredient in ipairs(ingredients) do
+					for j, product in ipairs(products) do
+						if ingredient[1] == product[1] then
+							
+			else
+				
+			end
+		end
+			
+		
+		market_recipes[recipe.name] = {crafting_cats[recipe.category][1], ingredients, products, 1, combo, recipe.energy}
 	end
 	
 	return market_recipes
+end
+
+-- Check if recipe has a catalyst
+function has_catalyst(recipe)
+	for __, ingredient in pairs(recipe.ingredients) do
+		for __, product in pairs(recipe.products) do
+			if ingredient.name == product.name then
+				return true
+			end
+		end
+	end
+	
+	return false
 end
 
 -- Put the techs in order based on pack counts, time, and prerequisites
@@ -283,6 +313,29 @@ function determine_next_tech(met)
 end
 
 -- GLOBAL HELPER METHODS
+
+-- Check if 2 tables share a value (giving a value in [3] checks for a specific value)
+function table.share_value(t1, t2, value)
+	if not type(t1) == "table" or not type(t2) == "table" then
+		return false
+	end
+	
+	if value then
+		if table.contains_value(t1, value) and table.contains_value(t2, value) then
+			return true
+		else
+			return false
+		end
+	end
+	
+	for __, value in pairs(t1) do
+		if table.contains_value(t2, value) then
+			return true
+		end
+	end
+	
+	return false
+end
 
 -- Count the number of items in table (0 if not a table)
 function table.count(t)
