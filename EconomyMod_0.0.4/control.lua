@@ -8,6 +8,7 @@ if not frame_name then frame_name = 0 end
 if not market then market = {} end
 -- constants: item.name = #
 if not constants then constants = {
+	"energy" = .001,
 	"iron-ore" = 1,
 	"copper-ore" = 1,
 	"coal" = 1,
@@ -26,6 +27,7 @@ script.on_init(init)
 script.on_configuration_changed(init)
 
 function init()
+	math.randomseed(os.time())
 	build_order()
 	--build_eco()
 end
@@ -64,7 +66,7 @@ function test_open(player)
 end
 
 function build_eco()
-	-- recipes: recipe.name = producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy
+	-- recipes: recipe.name = producer, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, time
 	local recipes = link_recipe_categories()
 	-- tech_order: # = tech
 	local tech_order = order_tech()
@@ -78,18 +80,60 @@ function build_eco()
 		end
 	end
 	
+	-- Add energy to market
+	market["energy"] = {0, 0, 0, 0, {}}
+	
+	-- Add all items to market
 	for __, item in pairs(item_order) do
 		market[item] = {0, 0, 0, 0, {}}
 	end
 	
+	-- Add all recipes to market
 	for __, recipe in pairs(recipes) do
 		for __, product in pairs(recipe[3]) do
-			table.insert(market[product[1]][5], recipe)
+			-- Clear all other products out from recipe
+			local simplified_recipe = recipe
+			simplified_recipe[3] = product[2]
+			table.insert(market[product[1]][5], simplified_recipe)
 		end
 	end
 	
+	-- Insert constants for raw-resources
+	for resource, constant in pairs(constants) do
+		market[resource][5] = constant
+	end
+	
+	-- Determine weights for each recipe in end price
+	--(solve (1/tech_level1)X + (1/tech_level2)X + ... + (1/tech_levelN)X = 1 for X, then use X to find the weights (weight = (1/tech_level)X) )
 	for __, item in pairs(market) do
-		
+		-- If table in recipes section (signaling not a raw-resource)...
+		if type(item[5]) == "table" then
+			-- weight = sum of tech ratio components
+			local weight = 0
+			
+			-- Change tech_level into the recipe weight coefficient
+			for __, recipe in pairs(item[5]) do
+				recipe[3] = (1 / recipe[3])
+				weight = weight + recipe[3]
+			end
+			
+			-- Convert weight into item's weight coefficient
+			weight = 1 / weight
+			
+			-- 
+			for __, recipe in pairs(item[5]) do
+				recipe[3] = recipe[3] * weight
+			end
+		end
+	end
+	
+	-- Calculate initial price, velocity, min, and max of each resource in market
+	for number, item_name in pairs(item_order) do 
+		local item = market[item_name]
+		local price = 0
+		if type(item[5] == "table") then
+			for __, recipe in pairs(item[5]) do
+				price = price + recipe
 	
 	---[[
 	if table.count(recipes) > 0 then
@@ -141,7 +185,7 @@ function link_recipe_categories()
 		end
 	end
 	
-	-- market_recipes: recipe.name = {{producer.name, producer.crafting_speed, energy_consumption (watts), {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy}
+	-- market_recipes: recipe.name = {{producer.name, producer.crafting_speed, energy_consumption (watts)}, {ingredients or {ingredient, amount}}, {products or {product, amount}}, tech_tier, energy}
 	local market_recipes = {}
 	
 	for __, recipe in pairs(game.recipe_prototypes) do 
