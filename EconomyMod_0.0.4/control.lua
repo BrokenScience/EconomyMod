@@ -79,12 +79,17 @@ function build_eco()
 	end
 	
 	for __, item in pairs(item_order) do
-		if constants[item] then
-			market[item] = {0, 0, 0, 0, constants[item]}
-		else
-			market[item] = {0, 0, 0, 0, {}}
+		market[item] = {0, 0, 0, 0, {}}
+	end
+	
+	for __, recipe in pairs(recipes) do
+		for __, product in pairs(recipe[3]) do
+			table.insert(market[product[1]][5], recipe)
 		end
 	end
+	
+	for __, item in pairs(market) do
+		
 	
 	---[[
 	if table.count(recipes) > 0 then
