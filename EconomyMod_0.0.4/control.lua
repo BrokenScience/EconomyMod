@@ -19,9 +19,11 @@ if not resource_constants then resource_constants = {
 	"crude-oil" = 1
 	}
 end
--- other constants for non-item things
+-- other constants for non-resource things
 if not arbitrary_constants then arbitrary_constants = {
-	
+	"time" = 1,
+	"min" = 0
+	"max" = 10
 	}
 end
 -- debug_messages: # = "Message"
@@ -54,7 +56,9 @@ function test_open(player)
 	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
 	debug_messages = {}
-	build_eco()
+	--build_eco()
+	rng_test()
+	
 	
 	if table.count(debug_messages) > 0 then
 	debuggery.add({type = "label", name = next_name(), caption = table.count(debug_messages)})
@@ -97,7 +101,7 @@ function build_eco()
 	for __, recipe in pairs(recipes) do
 		for __, product in pairs(recipe[3]) do
 			-- Clear all other products out from recipe
-			-- simplified_recipe: # = 
+			-- simplified_recipe: # = producer, {ingredient, amount}, # produced, tech_tier, combo_coefficient, time
 			local simplified_recipe = recipe
 			simplified_recipe[3] = product[2]
 			table.insert(simplified_recipe, 5, product[3])
