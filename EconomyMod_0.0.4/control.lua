@@ -4,7 +4,7 @@ require("code.ordering")
 if not item_order then item_order = {} end
 -- frame_name: variable to hold name of next print label for debug_messages
 if not frame_name then frame_name = 0 end
--- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, time} or constant
+-- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, time}, constant, energy_value or nil
 if not market then market = {} end
 -- resource_constants: item.name = #
 if not resource_constants then resource_constants = {
@@ -22,8 +22,9 @@ end
 -- other constants for non-resource things
 if not arbitrary_constants then arbitrary_constants = {
 	"time" = 1,
-	"min" = 0
-	"max" = 10
+	"ingredients" = 1.1,
+	"location" = .25,
+	"scale" = 10
 	}
 end
 -- debug_messages: # = "Message"
@@ -57,7 +58,7 @@ function test_open(player)
 	
 	debug_messages = {}
 	--build_eco()
-	rng_test()
+	other()
 	
 	
 	if table.count(debug_messages) > 0 then
@@ -72,6 +73,17 @@ function test_open(player)
 	end
 	
 	--frame.add({type = "label", name = next_name(), caption = table.count(item_order)})
+end
+
+function other()
+	for __, entity in (game.entity_prototypes) do
+		local cap = entity.name
+		
+		if entity.minable_properties.fluid_amount then
+			cap = cap + " " + entity.minable_properties.fluid_amount
+			debuggery(cap)
+		end
+	end
 end
 
 function build_eco()
@@ -90,11 +102,13 @@ function build_eco()
 	end
 	
 	-- Add energy to market
-	market["energy"] = {0, 0, 0, 0, {}}
+	market["energy"] = {0, 0, 0, 0, {}, nil}
 	
 	-- Add all items to market
-	for __, item in pairs(item_order) do
-		market[item] = {0, 0, 0, 0, {}}
+	for __, item in pairs(game.item_prototypes) do
+		if not item.has_flag("hidden") then
+			market[item.name] = {0, 0, 0, 0, {}, item.fuel_value}
+		end
 	end
 	
 	-- Add all recipes to market
@@ -134,6 +148,7 @@ function build_eco()
 			-- 
 			for __, recipe in pairs(item[5]) do
 				recipe[4] = recipe[5] * recipe[4] * weight
+				-- recipe: # = producer, {ingredient, amount}, # produced, recipe_weight, time
 				table.remove(recipe, 5)
 			end
 		end
@@ -141,11 +156,27 @@ function build_eco()
 	
 	-- Calculate initial price, velocity, min, and max of each resource in market
 	for number, item_name in pairs(item_order) do 
+		-- Save market[item_name]
 		local item = market[item_name]
-		local price = 0
-		if type(item[5] == "table") then
-			for __, recipe in pairs(item[5]) do
-				price = price + recipe
+		
+		-- Calculate price
+		for __, recipe in pairs(item[5]) do
+			local ing_cost = 0
+			for __, ingredient in pairs(recipe[2]) do
+				ing_cost = ing_cost + market[ingredient[1]][1] * ingredient[2] * arbitrary_constants.ingredients
+			end
+			local energy_cost = recipe[1][3] * recipe[5] * market.energy[1]
+			local time_cost = recipe[1][2] * recipe[5] * arbitrary_constants.time
+			local recipe_cost = (ing_cost + energy_cost + time_cost) * recipe[4] / recipe[3]
+			item[1] = item[1] + recipe_cost
+		end
+		
+		item[1] = item[5]
+		
+		item[1] = item[1] + item[6] * market.energy[1]
+	end
+		
+		
 	
 	--[[
 	if table.count(recipes) > 0 then
