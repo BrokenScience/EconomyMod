@@ -8,23 +8,23 @@ if not frame_name then frame_name = 0 end
 if not market then market = {} end
 -- resource_constants: item.name = #
 if not resource_constants then resource_constants = {
-	"energy" = 1,
-	"iron-ore" = 1,
-	"copper-ore" = 1,
-	"coal" = 1,
-	"stone" = 1,
-	"raw-wood" = 1,
-	"uranium-ore" = 1,
-	"water" = 1,
-	"crude-oil" = 1
+	["energy"] = 1,
+	["iron-ore"] = 1,
+	["copper-ore"] = 1,
+	["coal"] = 1,
+	["stone"] = 1,
+	["raw-wood"] = 1,
+	["uranium-ore"] = 1,
+	["water"] = 1,
+	["crude-oil"] = 1
 	}
 end
 -- other constants for non-resource things
 if not arbitrary_constants then arbitrary_constants = {
-	"time" = 1,
-	"ingredients" = 1.1,
-	"location" = .25,
-	"scale" = 10
+	["time"] = 1,
+	["ingredients"] = 1.1,
+	["location"] = .25,
+	["scale"] = 10
 	}
 end
 -- debug_messages: # = "Message"
@@ -76,12 +76,16 @@ function test_open(player)
 end
 
 function other()
-	for __, entity in (game.entity_prototypes) do
-		local cap = entity.name
-		
-		if entity.minable_properties.fluid_amount then
-			cap = cap + " " + entity.minable_properties.fluid_amount
-			debuggery(cap)
+	for name, entity in pairs(game.entity_prototypes) do
+		local cap = name
+		if entity.mineable_properties then
+			if entity.mineable_properties.fluid_amount then
+				cap = cap .. "; " .. entity.mineable_properties.required_fluid .. ": " .. entity.mineable_properties.fluid_amount .. "; " .. entity.mineable_properties.mining_time .. "; "
+				for __, product in pairs(entity.mineable_properties.products) do
+					cap = cap .. product.name .. ": " .. product.amount
+				end
+				debuggery(cap)
+			end
 		end
 	end
 end
