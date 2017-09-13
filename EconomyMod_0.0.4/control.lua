@@ -57,8 +57,8 @@ function test_open(player)
 	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
 	debug_messages = {}
-	--build_eco()
-	other()
+	build_eco()
+	--other()
 	
 	
 	if table.count(debug_messages) > 0 then
@@ -278,17 +278,21 @@ function link_recipe_categories()
 			local combo = 0
 			
 			-- Calculate total number of all products
-			for __, product in pairs(products) do
-				combo = combo + 1 / product[2]
-			end
+			--if (type(products) == "table") then
+				debuggery(table.tostring(products))
+				
+				for __, product in pairs(products) do
+					combo = combo + 1 / product[2]
+				end
 			
-			-- Convert to combo multiplier
-			combo = 1 / combo
+				-- Convert to combo multiplier
+				combo = 1 / combo
 			
-			-- Merge with possible probability coefficient
-			for __, product in pairs(products) do
-				product[3] = product[3] * combo * 1 / product[2]
-			end
+				-- Merge with possible probability coefficient
+				for __, product in pairs(products) do
+					product[3] = product[3] * combo * 1 / product[2]
+				end
+			--end
 		end
 		
 		
