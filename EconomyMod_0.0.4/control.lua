@@ -2,10 +2,13 @@ require("code.ordering")
 
 -- item_order: # = item.name
 if not item_order then item_order = {} end
+
 -- frame_name: variable to hold name of next print label for debug_messages
 if not frame_name then frame_name = 0 end
+
 -- market: item.name = price, velocity, min, max,{producer, {ingredient.name, # required}, # produced, weight, time}, constant, energy_value or nil
 if not market then market = {} end
+
 -- resource_constants: item.name = #
 if not resource_constants then resource_constants = {
 	["energy"] = 1,
@@ -19,6 +22,7 @@ if not resource_constants then resource_constants = {
 	["crude-oil"] = 1
 	}
 end
+
 -- other constants for non-resource things
 if not arbitrary_constants then arbitrary_constants = {
 	["time"] = 1,
@@ -27,6 +31,7 @@ if not arbitrary_constants then arbitrary_constants = {
 	["scale"] = 10
 	}
 end
+
 -- debug_messages: # = "Message"
 if not debug_messages then debug_messages = {} end
 
@@ -36,7 +41,7 @@ script.on_configuration_changed(init)
 
 function init()
 	math.randomseed(os.time())
-	build_order()
+	--build_order()
 	--build_eco()
 end
 
@@ -52,12 +57,13 @@ end)
 
 -- Opens test gui
 function test_open(player)
-	local main_frame = player.gui.center.add({type = "frame", name = "test", direction = "vertical"})
+	local main_frame = player.gui.center.add({type = "frame", name = "test", direction = "vertical", style = "debuggery"})
 	local frame = main_frame.add({type = "scroll-pane", name = "test-scroll", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	local debuggery = main_frame.add({type = "scroll-pane", name = "debuggery", horizontal_scroll_policy = "auto", vertical_scroll_policy = "auto", style = "test-style"})
 	
 	debug_messages = {}
-	build_eco()
+	build_order()
+	--build_eco()
 	--other()
 	
 	
@@ -444,7 +450,7 @@ function next_name()
 	return tostring(frame_name)
 end
 
--- debug: table to readable string (found at http://lua-users.org/wiki/TableUtils )
+-- debug: table to readable string (found at http://lua-users.org/wiki/TableUtils)
 function table.val_to_str ( v )
   if "string" == type( v ) then
     v = string.gsub( v, "\n", "\\n" )

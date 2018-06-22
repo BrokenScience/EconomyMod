@@ -9,6 +9,7 @@ data:extend (
 		type = "market",
 		name = "marcet",
 		icon = "__EconomyMod__/graphics/entity/market.png",
+		icon_size = 32,
 		flags = {"placeable-neutral", "player-creation", "placeable-player"},
 		minable = {hardness = 0.2, mining_time = 1, result = "marcet"},
 		subgroup = "production-machine",

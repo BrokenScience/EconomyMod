@@ -10,6 +10,7 @@ data:extend({
 	type = "technology",
 	name = "marcet",
 	icon = "__EconomyMod__/graphics/icon/market.png",
+	icon_size = 32,
 	prerequisites = {"electronics", "logistics"},
 	unit =
 	{
@@ -26,6 +27,7 @@ data:extend({
 	type = "technology",
 	name = "portals",
 	icon = "__EconomyMod__/graphics/icon/market.png",
+	icon_size = 32,
 	prerequisites = {"marcet"},
 	unit = 
 	{

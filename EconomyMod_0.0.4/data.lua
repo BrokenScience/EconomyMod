@@ -12,6 +12,11 @@ data:extend({
 data.raw["gui-style"]["default"]["test-style"] =
 {
 	type = "scroll_pane_style",
-	maximal_height = 400,
-	maximal_width = 250
+	maximal_height = 500,
+	maximal_width = 500
+}
+
+data.raw["gui-style"]["default"]["debuggery"] = 
+{
+	width = 500
 }
