@@ -16,5 +16,6 @@ data.raw["gui-style"]["default"]["test-style"] =
 
 data.raw["gui-style"]["default"]["debuggery"] = 
 {
+	type= "frame_style",
 	width = 500
 }

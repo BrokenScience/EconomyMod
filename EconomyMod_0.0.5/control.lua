@@ -11,7 +11,7 @@ function init()
 	--math.randomseed(os.time())
 end
 
---[[ Test gui control
+-- Test gui control
 script.on_event("Eco", function(event)
 	local player = game.players[event.player_index]
 	if player.gui.center.test then
@@ -19,7 +19,7 @@ script.on_event("Eco", function(event)
 	else
 		test_open(player)
 	end
-end)]]
+end)
 
 function test_open(player)
 	-- Set up gui
